@@ -1,2 +1,2 @@
-# codenebula_01
+#  customer churn project
  "Predicting customer churn using machine learning to uncover hidden patterns" 
