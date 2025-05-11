@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Churn Prediction Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            color: #3498db;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .result-card {
+            text-align: center;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .churn-high {
+            background-color: #ffebee;
+            border-left: 5px solid #e53935;
+        }
+        
+        .churn-medium {
+            background-color: #fff8e1;
+            border-left: 5px solid #ffb300;
+        }
+        
+        .churn-low {
+            background-color: #e8f5e9;
+            border-left: 5px solid #43a047;
+        }
+        
+        .probability {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .high {
+            color: #e53935;
+        }
+        
+        .medium {
+            color: #ffb300;
+        }
+        
+        .low {
+            color: #43a047;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .features {
+            margin-top: 30px;
+        }
+        
+        .feature {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .feature-name {
+            font-weight: 600;
+        }
+        
+        .feature-value {
+            color: #7f8c8d;
+        }
+        
+        .feature-impact {
+            width: 100px;
+            height: 8px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        
+        .impact-bar {
+            height: 100%;
+            border-radius: 4px;
+            background-color: #3498db;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Customer Churn Prediction</h1>
+        <p class="subtitle">Predict which customers are at risk of leaving your service</p>
+    </header>
+    
+    <div class="container">
+        <section class="form-section">
+            <h2>Customer Information</h2>
+            <form id="churnForm">
+                <div class="form-group">
+                    <label for="tenure">Tenure (months)</label>
+                    <input type="number" id="tenure" min="0" max="120" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthlyCharges">Monthly Charges ($)</label>
+                    <input type="number" id="monthlyCharges" min="0" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="totalCharges">Total Charges ($)</label>
+                    <input type="number" id="totalCharges" min="0" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contract">Contract Type</label>
+                    <select id="contract" required>
+                        <option value="month-to-month">Month-to-month</option>
+                        <option value="one-year">One year</option>
+                        <option value="two-year">Two year</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="paymentMethod">Payment Method</label>
+                    <select id="paymentMethod" required>
+                        <option value="electronic-check">Electronic check</option>
+                        <option value="mailed-check">Mailed check</option>
+                        <option value="bank-transfer">Bank transfer</option>
+                        <option value="credit-card">Credit card</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="onlineSecurity">Online Security</label>
+                    <select id="onlineSecurity" required>
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                        <option value="no-internet">No internet service</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="techSupport">Tech Support</label>
+                    <select id="techSupport" required>
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                        <option value="no-internet">No internet service</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="internetService">Internet Service</label>
+                    <select id="internetService" required>
+                        <option value="dsl">DSL</option>
+                        <option value="fiber-optic">Fiber optic</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+                
+                <button type="submit">Predict Churn Risk</button>
+            </form>
+        </section>
+        
+        <section class="results-section">
+            <h2>Prediction Results</h2>
+            <div id="results" style="display: none;">
+                <div class="result-card" id="resultCard">
+                    <h3>Churn Risk Prediction</h3>
+                    <div class="probability" id="probability">65%</div>
+                    <div id="riskLevel">High Risk</div>
+                    
+                    <div class="explanation">
+                        <p id="explanationText">This customer has a high probability of churning based on their contract type, tenure, and service usage patterns.</p>
+                    </div>
+                    
+                    <div class="features">
+                        <h4>Key Factors</h4>
+                        <div class="feature">
+                            <div>
+                                <div class="feature-name">Contract Type</div>
+                                <div class="feature-value" id="contractValue">Month-to-month</div>
+                            </div>
+                            <div>
+                                <div class="feature-impact">
+                                    <div class="impact-bar" style="width: 80%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="feature">
+                            <div>
+                                <div class="feature-name">Tenure</div>
+                                <div class="feature-value" id="tenureValue">5 months</div>
+                            </div>
+                            <div>
+                                <div class="feature-impact">
+                                    <div class="impact-bar" style="width: 65%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="feature">
+                            <div>
+                                <div class="feature-name">Monthly Charges</div>
+                                <div class="feature-value" id="monthlyValue">$89.50</div>
+                            </div>
+                            <div>
+                                <div class="feature-impact">
+                                    <div class="impact-bar" style="width: 45%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recommendations">
+                    <h4>Recommended Actions</h4>
+                    <ul id="recommendationsList">
+                        <li>Offer loyalty discount for longer contract</li>
+                        <li>Provide personalized tech support check-in</li>
+                        <li>Consider special retention offer</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="placeholder">
+                <p>Enter customer information and click "Predict Churn Risk" to see the prediction results.</p>
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        document.getElementById('churnForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const tenure = parseInt(document.getElementById('tenure').value);
+            const monthlyCharges = parseFloat(document.getElementById('monthlyCharges').value);
+            const totalCharges = parseFloat(document.getElementById('totalCharges').value);
+            const contract = document.getElementById('contract').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const onlineSecurity = document.getElementById('onlineSecurity').value;
+            const techSupport = document.getElementById('techSupport').value;
+            const internetService = document.getElementById('internetService').value;
+            
+            // In a real application, you would send this data to a backend API
+            // For this demo, we'll simulate a prediction with some logic
+            
+            // Simulate prediction (this is just example logic)
+            let probability = 0.3; // base probability
+            
+            // Adjust based on contract type
+            if (contract === 'month-to-month') probability += 0.25;
+            else if (contract === 'one-year') probability += 0.1;
+            
+            // Adjust based on tenure
+            if (tenure < 12) probability += 0.15;
+            else if (tenure < 24) probability += 0.05;
+            
+            // Adjust based on monthly charges (higher charges = higher churn)
+            if (monthlyCharges > 70) probability += 0.1;
+            
+            // Adjust based on services
+            if (onlineSecurity === 'no' || techSupport === 'no') probability += 0.1;
+            if (internetService === 'fiber-optic') probability += 0.05;
+            
+            // Cap probability between 5% and 95%
+            probability = Math.max(0.05, Math.min(0.95, probability));
+            
+            // Convert to percentage
+            const probabilityPercent = Math.round(probability * 100);
+            
+            // Determine risk level
+            let riskLevel, riskClass;
+            if (probabilityPercent >= 70) {
+                riskLevel = "High Risk";
+                riskClass = "high";
+                document.getElementById('resultCard').className = "result-card churn-high";
+            } else if (probabilityPercent >= 40) {
+                riskLevel = "Medium Risk";
+                riskClass = "medium";
+                document.getElementById('resultCard').className = "result-card churn-medium";
+            } else {
+                riskLevel = "Low Risk";
+                riskClass = "low";
+                document.getElementById('resultCard').className = "result-card churn-low";
+            }
+            
+            // Update the UI with results
+            document.getElementById('probability').textContent = probabilityPercent + "%";
+            document.getElementById('probability').className = "probability " + riskClass;
+            document.getElementById('riskLevel').textContent = riskLevel;
+            
+            // Update feature values
+            document.getElementById('contractValue').textContent = formatContract(contract);
+            document.getElementById('tenureValue').textContent = tenure + " months";
+            document.getElementById('monthlyValue').textContent = "$" + monthlyCharges.toFixed(2);
+            
+            // Update explanation text
+            let explanation = "This customer has a " + riskLevel.toLowerCase() + " of churning. ";
+            if (contract === 'month-to-month') {
+                explanation += "Their month-to-month contract increases churn risk. ";
+            }
+            if (tenure < 12) {
+                explanation += "Their short tenure (" + tenure + " months) suggests they may not be fully established. ";
+            }
+            if (monthlyCharges > 70) {
+                explanation += "The relatively high monthly charges ($" + monthlyCharges.toFixed(2) + ") may be a factor. ";
+            }
+            document.getElementById('explanationText').textContent = explanation;
+            
+            // Update recommendations
+            let recommendations = [];
+            if (probabilityPercent >= 70) {
+                recommendations.push("Immediate retention offer needed");
+                recommendations.push("Personalized outreach from account manager");
+            } else if (probabilityPercent >= 40) {
+                recommendations.push("Consider loyalty incentives");
+                recommendations.push("Check-in call to assess satisfaction");
+            } else {
+                recommendations.push("Monitor for changes in usage patterns");
+                recommendations.push("Standard engagement communications");
+            }
+            
+            if (contract === 'month-to-month' && tenure > 3) {
+                recommendations.push("Offer discount for annual contract");
+            }
+            
+            if (onlineSecurity === 'no' || techSupport === 'no') {
+                recommendations.push("Promote security/support package benefits");
+            }
+            
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = '';
+            recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendationsList.appendChild(li);
+            });
+            
+            // Show results
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+        });
+        
+        function formatContract(contract) {
+            const map = {
+                'month-to-month': 'Month-to-month',
+                'one-year': 'One year',
+                'two-year': 'Two year'
+            };
+            return map[contract] || contract;
+        }
+    </script>
+</body>
+</html>
